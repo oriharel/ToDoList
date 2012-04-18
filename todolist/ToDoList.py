@@ -64,6 +64,11 @@ class AddCategory(webapp2.RequestHandler):
         category.name = category_name
         category.put()
         
+class DeleteCategory(webapp2.RequestHandler):
+    def delete(self):
+        category_name = self.request.get('name')
+        db.delete(category_key(category_name))
+        
 class AddTask(webapp2.RequestHandler):
   def post(self):
     # We set the same parent key on the 'Greeting' to ensure each greeting is in
@@ -111,5 +116,6 @@ class GetCategories(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([('/', MainPage),
                                ('/add', AddTask),
                                ('/categories', GetCategories),
-                               ('/addCategory', AddCategory)],
+                               ('/addCategory', AddCategory),
+                               ('/deleteCategory', DeleteCategory)],
                               debug=True)
