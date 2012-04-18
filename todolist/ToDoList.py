@@ -50,7 +50,7 @@ class MainPage(webapp2.RequestHandler):
         taskAuthor = 'An anonymous'
         
       content = task.content
-      task = {"author":taskAuthor, "content":content}
+      task = {"author":taskAuthor, "content":content, "category":task.category}
       myOfferJSONList.append(task)
       
 
@@ -58,8 +58,7 @@ class MainPage(webapp2.RequestHandler):
 
 class AddCategory(webapp2.RequestHandler):
     def post(self):
-        jsonBody = json.loads(self.request.body)
-        category_name = jsonBody['name']
+        category_name = self.request.get('name')
         category = TaskCategory(key=category_key(category_name))
         category.name = category_name
         category.put()
@@ -117,5 +116,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/add', AddTask),
                                ('/categories', GetCategories),
                                ('/addCategory', AddCategory),
+                               ('/tasks', MainPage),
                                ('/deleteCategory', DeleteCategory)],
                               debug=True)
