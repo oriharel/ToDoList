@@ -54,7 +54,7 @@ class MainPage(webapp2.RequestHandler):
       myOfferJSONList.append(task)
       
 
-    self.response.out.write(json.dumps(myOfferJSONList))
+    self.response.out.write(json.dumps({"tasks":myOfferJSONList}))
 
 class AddCategory(webapp2.RequestHandler):
     def post(self):
