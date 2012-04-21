@@ -5,6 +5,7 @@ from google.appengine.ext import db
 from google.appengine.api import users
 
 import json
+import urllib
 
 
 class TaskItem(db.Model):
@@ -45,7 +46,8 @@ class MainPage(webapp2.RequestHandler):
                 if task.category == category.name:
                 
                     content = task.content
-                    task = {"author":taskAuthor, "content":content, "category":task.category}
+                    logging.error("task key is %s", task.key().id())
+                    task = {"author":taskAuthor, "content":content, "category":task.category, "taskId":task.key().id()}
                     tasksList.append(task)
                     
             categoriesJson.append({"category":category.name, "tasks":tasksList})
@@ -64,6 +66,15 @@ class DeleteCategory(webapp2.RequestHandler):
     def delete(self):
         category_name = self.request.get('name')
         db.delete(category_key(category_name))
+        
+class DeleteTask(webapp2.RequestHandler):
+    def delete(self):
+        jsonBody = json.loads(self.request.body)
+        taskId = jsonBody['taskId']
+        category_name = jsonBody['category']
+        category = TaskCategory(key=category_key(category_name))
+        task_k = db.Key.from_path('TaskCategory', category_name, 'TaskItem', taskId)
+        db.delete(task_k)
         
 class AddTask(webapp2.RequestHandler):
     def post(self):
@@ -101,5 +112,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/categories', GetCategories),
                                ('/addCategory', AddCategory),
                                ('/tasks', MainPage),
-                               ('/deleteCategory', DeleteCategory)],
+                               ('/deleteCategory', DeleteCategory),
+                               ('/deleteTask', DeleteTask)],
                               debug=True)
