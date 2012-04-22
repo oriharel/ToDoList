@@ -18,6 +18,7 @@ class TaskItem(db.Model):
     author = db.UserProperty()
     content = db.StringProperty(multiline=True)
     category = db.ReferenceProperty(TaskCategory)
+    done = db.BooleanProperty()
     date = db.DateTimeProperty(auto_now_add=True)
   
 
@@ -49,7 +50,7 @@ class MainPage(webapp2.RequestHandler):
                     
                         content = task.content
                         logging.error("task key is %s", task.key().id())
-                        task = {"author":taskAuthor, "content":content, "category":Utils.to_dict(task.category), "taskId":task.key().id()}
+                        task = {"author":taskAuthor, "content":content, "category":Utils.to_dict(task.category), "taskId":task.key().id(), "done":task.done}
                         tasksList.append(task)
                     
             categoriesJson.append({"category":category.name, "tasks":tasksList})
@@ -65,9 +66,8 @@ class GetFlatTasks(webapp2.RequestHandler):
         
         tasksList = []
         for task in tasks:
-            content = task.content
             logging.error("task key is %s", task.key().id())
-            task = {"content":task.content, "category":Utils.to_dict(task.category), "taskId":task.key().id()}
+            task = {"content":task.content, "category":Utils.to_dict(task.category), "taskId":task.key().id(), "done":task.done}
             tasksList.append(task)
                     
         self.response.out.write(json.dumps({"tasks":tasksList}))
@@ -88,11 +88,20 @@ class DeleteTaskFromList(webapp2.RequestHandler):
     def delete(self):
         jsonBody = json.loads(self.request.body)
         taskId = jsonBody['taskId']
-#        category_name = jsonBody['category']
-#        category = TaskCategory(key=category_key(category_name))
         task_k = db.Key.from_path('TaskItem', taskId)
         task = db.get(task_k)
         task.category = None
+        task.done = False
+        task.put()
+        
+        
+class FinishTask(webapp2.RequestHandler):
+    def put(self):
+        jsonBody = json.loads(self.request.body)
+        taskId = jsonBody['taskId']
+        task_k = db.Key.from_path('TaskItem', taskId)
+        task = db.get(task_k)
+        task.done = True
         task.put()
         
 class DeleteTask(webapp2.RequestHandler):
@@ -114,6 +123,7 @@ class AddTask(webapp2.RequestHandler):
         task = TaskItem()            
         task.content = jsonBody['content']
         task.category = category
+        task.done = False
         task.put()
 
 class GetCategories(webapp2.RequestHandler):
@@ -137,5 +147,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/deleteCategory', DeleteCategory),
                                ('/deleteTaskFromList', DeleteTaskFromList),
                                ('/deleteTask', DeleteTask),
+                               ('/finishTask', FinishTask),
                                ('/getFlatTasks', GetFlatTasks)],
                               debug=True)
