@@ -95,14 +95,23 @@ class DeleteTaskFromList(webapp2.RequestHandler):
         task.put()
         
         
-class FinishTask(webapp2.RequestHandler):
+class FinishTasks(webapp2.RequestHandler):
     def put(self):
         jsonBody = json.loads(self.request.body)
-        taskId = jsonBody['taskId']
-        task_k = db.Key.from_path('TaskItem', taskId)
-        task = db.get(task_k)
-        task.done = True
-        task.put()
+        finishTaskIds = jsonBody['finishTaskIds']
+        unFinishTaskIds = jsonBody['unFinishTaskIds']
+        
+        for taskId in finishTaskIds:
+            task_k = db.Key.from_path('TaskItem', taskId)
+            task = db.get(task_k)
+            task.done = True
+            task.put()
+            
+        for taskId in unFinishTaskIds:
+            task_k = db.Key.from_path('TaskItem', taskId)
+            task = db.get(task_k)
+            task.done = False
+            task.put()
         
 class DeleteTask(webapp2.RequestHandler):
     def delete(self):
@@ -147,6 +156,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/deleteCategory', DeleteCategory),
                                ('/deleteTaskFromList', DeleteTaskFromList),
                                ('/deleteTask', DeleteTask),
-                               ('/finishTask', FinishTask),
+                               ('/finishTasks', FinishTasks),
                                ('/getFlatTasks', GetFlatTasks)],
                               debug=True)
