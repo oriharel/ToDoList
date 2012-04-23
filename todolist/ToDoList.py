@@ -89,15 +89,19 @@ class DeleteTasksFromList(webapp2.RequestHandler):
         jsonBody = json.loads(self.request.body)
         taskIds = jsonBody['taskIds']
         
+        keys = []
+        
         for taskId in taskIds:
-            task_k = db.Key.from_path('TaskItem', taskId)
-            task = db.get(task_k)
-            task.category = None
-            task.done = False
-            task.put()
+            keys.append(db.Key.from_path('TaskItem', taskId))
             
+        entities = db.get(keys)
         
-        
+        for entity in entities:
+            entity.category = None
+            entity.done = False
+            
+        db.put(entities)
+            
         
 class FinishTasks(webapp2.RequestHandler):
     def put(self):
@@ -105,7 +109,28 @@ class FinishTasks(webapp2.RequestHandler):
         finishTaskIds = jsonBody['finishTaskIds']
         unFinishTaskIds = jsonBody['unFinishTaskIds']
         
+        finishedKeys = []
+        unFinishedKeys = []
+        
         for taskId in finishTaskIds:
+            finishedKeys.append(db.Key.from_path('TaskItem', taskId))
+            
+        for taskId in unFinishTaskIds:
+            unFinishedKeys.append(db.Key.from_path('TaskItem', taskId))
+        
+        finishedEntites = db.get(finishedKeys)
+        unFinishedEntities = db.get(unFinishedKeys)
+        
+        for entity in finishedEntites:
+            entity.done = True
+        
+        for entity in unFinishedEntities:
+            entity.done = False
+        
+        db.put(finishedEntites)
+        db.put(unFinishedEntities)
+        
+        """for taskId in finishTaskIds:
             task_k = db.Key.from_path('TaskItem', taskId)
             task = db.get(task_k)
             task.done = True
@@ -115,7 +140,7 @@ class FinishTasks(webapp2.RequestHandler):
             task_k = db.Key.from_path('TaskItem', taskId)
             task = db.get(task_k)
             task.done = False
-            task.put()
+            task.put()"""
         
 class DeleteTask(webapp2.RequestHandler):
     def delete(self):
