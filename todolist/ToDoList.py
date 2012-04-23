@@ -33,10 +33,10 @@ class MainPage(webapp2.RequestHandler):
     
         categories = db.GqlQuery("SELECT * "
                                     "FROM TaskCategory "
-                                    "ORDER BY date DESC LIMIT 10")
+                                    "ORDER BY date DESC")
         tasks = db.GqlQuery("SELECT * "
                                 "FROM TaskItem "
-                                "ORDER BY date DESC LIMIT 10")
+                                "ORDER BY date DESC")
         categoriesJson = []
         for category in categories:
             logging.error('in category %s', category.name)
@@ -62,7 +62,7 @@ class GetFlatTasks(webapp2.RequestHandler):
     def get(self):
         tasks = db.GqlQuery("SELECT * "
                                 "FROM TaskItem "
-                                "ORDER BY date DESC LIMIT 10")
+                                "ORDER BY date DESC")
         
         tasksList = []
         for task in tasks:
@@ -84,15 +84,19 @@ class DeleteCategory(webapp2.RequestHandler):
         category_name = self.request.get('name')
         db.delete(category_key(category_name))
         
-class DeleteTaskFromList(webapp2.RequestHandler):
-    def delete(self):
+class DeleteTasksFromList(webapp2.RequestHandler):
+    def put(self):
         jsonBody = json.loads(self.request.body)
-        taskId = jsonBody['taskId']
-        task_k = db.Key.from_path('TaskItem', taskId)
-        task = db.get(task_k)
-        task.category = None
-        task.done = False
-        task.put()
+        taskIds = jsonBody['taskIds']
+        
+        for taskId in taskIds:
+            task_k = db.Key.from_path('TaskItem', taskId)
+            task = db.get(task_k)
+            task.category = None
+            task.done = False
+            task.put()
+            
+        
         
         
 class FinishTasks(webapp2.RequestHandler):
@@ -140,7 +144,7 @@ class GetCategories(webapp2.RequestHandler):
     
         categories = db.GqlQuery("SELECT * "
                                 "FROM TaskCategory "
-                                "ORDER BY date DESC LIMIT 10")
+                                "ORDER BY date DESC")
         categoriesJson = []
         for category in categories:
             categoriesJson.append({'name':category.name})
@@ -154,7 +158,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/addCategory', AddCategory),
                                ('/tasks', MainPage),
                                ('/deleteCategory', DeleteCategory),
-                               ('/deleteTaskFromList', DeleteTaskFromList),
+                               ('/deleteTasksFromList', DeleteTasksFromList),
                                ('/deleteTask', DeleteTask),
                                ('/finishTasks', FinishTasks),
                                ('/getFlatTasks', GetFlatTasks)],
